@@ -1,0 +1,8 @@
+# Mac OS X files
+.DS_Store
+
+# Binaries for programs and plugins
+.env
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out

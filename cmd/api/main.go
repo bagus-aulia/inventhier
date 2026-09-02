@@ -69,11 +69,11 @@ func main() {
 	mux := http.NewServeMux()
 
 	// 7. Initialize versioned routes (v1)
-	v1.NewRouter(mux, svc)
+	router := v1.NewRouter(mux, svc)
 
-	// 8. Start Server
+	// 8. Start Server with Middleware
 	log.Printf("Starting server on :%s in %s mode...", cfg.ServerPort, cfg.AppEnv)
-	if err := http.ListenAndServe(":"+cfg.ServerPort, mux); err != nil {
+	if err := http.ListenAndServe(":"+cfg.ServerPort, router.GetHandler()); err != nil {
 		log.Fatalf("could not start server: %v", err)
 	}
 }
