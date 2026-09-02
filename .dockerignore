@@ -1,0 +1,16 @@
+.git
+.gitignore
+.env
+.env.local
+.env.*.local
+.DS_Store
+*.md
+README.md
+Makefile
+docker-compose.yml
+.kiro
+.idea
+.vscode
+node_modules
+*.log
+coverage

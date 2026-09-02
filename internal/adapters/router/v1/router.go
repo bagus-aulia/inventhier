@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	v1Handler "github.com/bagus-aulia/inventhier/internal/adapters/handler/v1"
+	"github.com/bagus-aulia/inventhier/internal/adapters/middleware"
 	"github.com/bagus-aulia/inventhier/internal/core/ports"
 )
 
@@ -28,4 +29,13 @@ func (r *Router) registerRoutes() {
 
 	r.mux.HandleFunc("/api/v1/product", h.HandleGetProduct)
 	r.mux.HandleFunc("/api/v1/products", h.HandleListProducts)
+}
+
+// GetHandler returns the router with middleware applied
+func (r *Router) GetHandler() http.Handler {
+	handler := http.Handler(r.mux)
+	handler = middleware.CORSMiddleware(handler)
+	handler = middleware.RecoveryMiddleware(handler)
+	handler = middleware.LoggingMiddleware(handler)
+	return handler
 }
