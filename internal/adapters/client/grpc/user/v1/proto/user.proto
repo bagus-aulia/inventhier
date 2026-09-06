@@ -1,6 +1,6 @@
 syntax = "proto3";
-package user_v1_grpc;
-option go_package = "internal/adapters/client/grpc/user";
+package user.v1;
+option go_package = "github.com/bagus-aulia/inventhier/internal/adapters/client/grpc/user/pb";
  
 message Data {
     int32 status = 1;
