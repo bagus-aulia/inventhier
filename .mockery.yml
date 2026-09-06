@@ -1,0 +1,20 @@
+all: False
+template: testify
+packages:
+  github.com/bagus-aulia/inventhier/internal/core/ports:
+    config:
+      dir: "internal/adapters/client/grpc/user/mocks"
+      filename: "{{.InterfaceName}}.go"
+      pkgname: "mocks"
+      structname: "{{.InterfaceName}}"
+    interfaces:
+      UserClient:
+  github.com/bagus-aulia/inventhier/internal/adapters/client/grpc/user/pb:
+    config:
+      dir: "{{.InterfaceDir}}/mocks"
+      filename: "{{.InterfaceName}}.go"
+      pkgname: "mocks"
+      structname: "{{.InterfaceName}}"
+    interfaces:
+      GRPCUserServiceClient:
+         

@@ -2,8 +2,13 @@ package ports
 
 import (
 	"context"
+
 	"github.com/bagus-aulia/inventhier/internal/core/domain"
 )
+
+// ============================================================================
+// PRODUCT DRIVEN PORTS (Adapters that Product service depends on)
+// ============================================================================
 
 // ProductRepository is a driven port defining relational database operations (e.g. MySQL, PostgreSQL).
 type ProductRepository interface {
@@ -23,6 +28,10 @@ type ProductCache interface {
 type ProductAuditLogger interface {
 	LogAction(ctx context.Context, action string, productID string, details string) error
 }
+
+// ============================================================================
+// PRODUCT DRIVING PORT (Service interface exposed to outside world)
+// ============================================================================
 
 // ProductService is a driving port defining business use cases.
 type ProductService interface {

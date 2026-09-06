@@ -22,6 +22,15 @@ type Config struct {
 
 	MongoURI    string `mapstructure:"MONGO_URI" default:"mongodb://root:password@localhost:27017"`
 	MongoDBName string `mapstructure:"MONGO_DB_NAME" default:"inventhier_db"`
+
+	ClientTimeout int `mapstructure:"CLIENT_TIMEOUT" default:"30"` // seconds
+
+	// External gRPC Services
+	UserServiceGRPCAddr string `mapstructure:"USER_SERVICE_GRPC_ADDR" default:"localhost:50051"`
+
+	// External REST Services
+	PaymentServiceURL    string `mapstructure:"PAYMENT_SERVICE_URL" default:"http://localhost:3001"`
+	PaymentServiceAPIKey string `mapstructure:"PAYMENT_SERVICE_API_KEY" default:""`
 }
 
 // LoadConfig reads configuration from file or environment variables.

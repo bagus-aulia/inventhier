@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"database/sql"
 	"fmt"
 	"log"
@@ -9,11 +10,12 @@ import (
 	"time"
 
 	"github.com/bagus-aulia/inventhier/config"
-	mongoAudit "github.com/bagus-aulia/inventhier/internal/adapters/repository/mongodb/audit"
-	redisProduct "github.com/bagus-aulia/inventhier/internal/adapters/repository/redis/product"
-	sqlProduct "github.com/bagus-aulia/inventhier/internal/adapters/repository/sql/product"
+	restPayment "github.com/bagus-aulia/inventhier/internal/adapters/client/rest/payment/v1"
 	v1 "github.com/bagus-aulia/inventhier/internal/adapters/router/v1"
-	"github.com/bagus-aulia/inventhier/internal/core/services"
+	"github.com/bagus-aulia/inventhier/internal/bootstrap"
+	zerolog "github.com/rs/zerolog/log"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	// Register PostgreSQL driver
 	_ "github.com/lib/pq"
@@ -57,23 +59,45 @@ func main() {
 	defer mongoClient.Disconnect(ctx)
 	mongoDb := mongoClient.Database(cfg.MongoDBName)
 
-	// 4. Initialize Driven Adapters (injecting connections)
-	sqlRepo := sqlProduct.NewSQLRepository(dbSQL)
-	redisCache := redisProduct.NewRedisCache(redisClient)
-	mongoLogger := mongoAudit.NewMongoAuditLogger(mongoDb)
+	// 4. Setup HTTP Client
+	httpClient := &http.Client{Transport: &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}}
 
-	// 5. Initialize Business logic (injecting ports implementations)
-	svc := services.NewProductService(sqlRepo, redisCache, mongoLogger)
+	// 5. Initialize gRPC Clients (External Service Connections)
+	userGRPCClient := grpcClientConnection(cfg.UserServiceGRPCAddr, "user-service")
+	defer userGRPCClient.Close()
 
-	// 6. Initialize HTTP Mux Router
+	// 6. Initialize REST Clients (External Service Connections)
+	paymentRESTClient := restPayment.NewRESTPaymentClient(httpClient, cfg)
+
+	// 7. Bootstrap App (Dependency Injection)
+	// This initializes all repositories, services, and wires up dependencies
+	app := bootstrap.NewApp(dbSQL, redisClient, mongoDb, userGRPCClient, paymentRESTClient)
+
+	// 8. Initialize HTTP Mux Router
 	mux := http.NewServeMux()
 
-	// 7. Initialize versioned routes (v1)
-	router := v1.NewRouter(mux, svc)
+	// 9. Initialize versioned routes (v1) with ProductService
+	router := v1.NewRouter(mux, app.ProductService)
 
-	// 8. Start Server with Middleware
+	// 10. Start Server with Middleware
 	log.Printf("Starting server on :%s in %s mode...", cfg.ServerPort, cfg.AppEnv)
 	if err := http.ListenAndServe(":"+cfg.ServerPort, router.GetHandler()); err != nil {
 		log.Fatalf("could not start server: %v", err)
 	}
+}
+
+func grpcClientConnection(address, domain string) *grpc.ClientConn {
+	logger := zerolog.Logger
+
+	bridgeConn, err := grpc.NewClient(
+		address,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		logger.Error().Err(err).Msg("grpc connection to : " + domain)
+	}
+
+	return bridgeConn
 }
