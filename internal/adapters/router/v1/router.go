@@ -37,5 +37,6 @@ func (r *Router) GetHandler() http.Handler {
 	handler = middleware.CORSMiddleware(handler)
 	handler = middleware.RecoveryMiddleware(handler)
 	handler = middleware.LoggingMiddleware(handler)
+	handler = middleware.RequestIDMiddleware(handler)
 	return handler
 }

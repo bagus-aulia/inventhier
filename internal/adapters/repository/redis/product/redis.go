@@ -5,46 +5,65 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/bagus-aulia/inventhier/internal/core/domain"
+	"github.com/bagus-aulia/inventhier/config"
+	dto "github.com/bagus-aulia/inventhier/internal/core/dto/product"
+	"github.com/bagus-aulia/inventhier/internal/core/helpers"
 	"github.com/bagus-aulia/inventhier/internal/core/ports"
-	"github.com/redis/go-redis/v9"
 )
 
 type redisCache struct {
-	client *redis.Client
+	redisClient ports.RedisInterface
+	productRepo ports.Product
+	cfg         *config.Config
 }
 
 // NewRedisCache creates a new caching adapter using the go-redis client.
-func NewRedisCache(client *redis.Client) ports.ProductCache {
+func NewRedisCache(
+	redisClient ports.RedisInterface,
+	productRepo ports.Product,
+	cfg *config.Config,
+) ports.ProductCache {
 	return &redisCache{
-		client: client,
+		redisClient: redisClient,
+		productRepo: productRepo,
+		cfg:         cfg,
 	}
 }
 
-func (c *redisCache) Get(ctx context.Context, id string) (*domain.Product, error) {
-	val, err := c.client.Get(ctx, "product:"+id).Result()
+func (c *redisCache) GetProductBySKU(ctx context.Context, sku string) (*dto.Product, error) {
+	logger := helpers.GetZerologWithContext(ctx).
+		With().
+		Str("repository", "redis.product").
+		Str("function", "GetProductBySKU").
+		Str("sku", sku).
+		Logger()
+
+	var data dto.Product
+
+	// Get Room Entity From REdis
+	redisKey := "product:sku:" + sku
+	redisTimeOut := time.Duration(c.cfg.RedisDefaultTimeout)
+	err := c.redisClient.GetRedisData(ctx, redisKey, &data)
+	if err == nil {
+		return &data, nil
+	}
+
+	productData, err := c.productRepo.GetProductBySKU(ctx, sku)
 	if err != nil {
+		logger.Error().
+			Err(err).
+			Msg("Failed to get product data from sql")
 		return nil, err
 	}
 
-	var product domain.Product
-	if err := json.Unmarshal([]byte(val), &product); err != nil {
-		return nil, err
-	}
-
-	return &product, nil
-}
-
-func (c *redisCache) Set(ctx context.Context, product *domain.Product) error {
-	data, err := json.Marshal(product)
+	// set redis data
+	dataJSON, _ := json.Marshal(productData)
+	err = c.redisClient.SetRedisData(ctx, redisKey, string(dataJSON), redisTimeOut*time.Second)
 	if err != nil {
-		return err
+		logger.Error().
+			Err(err).
+			Msg("Failed to set redis cache with product data")
 	}
 
-	// Cache with TTL of 1 hour
-	return c.client.Set(ctx, "product:"+product.ID, data, 1*time.Hour).Err()
-}
-
-func (c *redisCache) Delete(ctx context.Context, id string) error {
-	return c.client.Del(ctx, "product:"+id).Err()
+	return productData, nil
 }
