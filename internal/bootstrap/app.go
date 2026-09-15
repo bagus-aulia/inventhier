@@ -2,13 +2,17 @@ package bootstrap
 
 import (
 	"database/sql"
+	"net/http"
 
+	"github.com/bagus-aulia/inventhier/config"
 	userGRPCv1 "github.com/bagus-aulia/inventhier/internal/adapters/client/grpc/user/v1"
-	auditMongo "github.com/bagus-aulia/inventhier/internal/adapters/repository/mongodb/audit"
+	restPayment "github.com/bagus-aulia/inventhier/internal/adapters/client/rest/payment/v1"
+	redisHelper "github.com/bagus-aulia/inventhier/internal/adapters/helpers/redis"
+	productLogMongo "github.com/bagus-aulia/inventhier/internal/adapters/repository/mongodb/product_log"
 	productCache "github.com/bagus-aulia/inventhier/internal/adapters/repository/redis/product"
 	productRepo "github.com/bagus-aulia/inventhier/internal/adapters/repository/sql/product"
 	"github.com/bagus-aulia/inventhier/internal/core/ports"
-	"github.com/bagus-aulia/inventhier/internal/core/services"
+	productService "github.com/bagus-aulia/inventhier/internal/core/services/product"
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc"
@@ -17,9 +21,9 @@ import (
 // App holds all initialized services and repositories for dependency injection.
 type App struct {
 	// Repositories
-	ProductRepository ports.ProductRepository
+	ProductRepository ports.Product
 	ProductCache      ports.ProductCache
-	ProductAuditLog   ports.ProductAuditLogger
+	ProductLog        ports.ProductLogger
 
 	// External Clients
 	UserClient    ports.UserClient
@@ -35,7 +39,8 @@ func NewApp(
 	redisClient *redis.Client,
 	mongoDb *mongo.Database,
 	userGRPCClient *grpc.ClientConn,
-	paymentRESTClient ports.PaymentClient,
+	httpClient *http.Client,
+	cfg *config.Config,
 ) *App {
 	app := &App{}
 
@@ -43,14 +48,17 @@ func NewApp(
 	// 1. Initialize Repositories (Driven Ports)
 	// ========================================
 
+	// Redis client helper
+	redisCliHelper := redisHelper.NewRedisRepository(redisClient, cfg)
+
 	// SQL Repository for Product data persistence
 	app.ProductRepository = productRepo.NewSQLRepository(dbSQL)
 
 	// Redis Cache for Product caching
-	app.ProductCache = productCache.NewRedisCache(redisClient)
+	app.ProductCache = productCache.NewRedisCache(redisCliHelper, app.ProductRepository, cfg)
 
-	// MongoDB Audit Logger for logging actions
-	app.ProductAuditLog = auditMongo.NewMongoAuditLogger(mongoDb)
+	// MongoDB Product Logger for logging actions
+	app.ProductLog = productLogMongo.NewMongoProductLogger(mongoDb)
 
 	// ========================================
 	// 2. Initialize External Clients (Driven Ports)
@@ -61,17 +69,17 @@ func NewApp(
 	app.UserClient = userClient
 
 	// REST Client for Payment Service (already initialized in main)
-	app.PaymentClient = paymentRESTClient
+	app.PaymentClient = restPayment.NewRESTPaymentClient(httpClient, cfg)
 
 	// ========================================
 	// 3. Initialize Services (Driving Port)
 	// ========================================
 
 	// Product Service with all dependencies injected
-	app.ProductService = services.NewProductService(
-		app.ProductRepository,
+	app.ProductService = productService.NewProductService(
 		app.ProductCache,
-		app.ProductAuditLog,
+		app.ProductLog,
+		app.UserClient,
 	)
 
 	return app

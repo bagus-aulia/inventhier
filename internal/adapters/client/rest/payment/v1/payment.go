@@ -1,4 +1,4 @@
-package payment
+package v1
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 	http "github.com/bagus-aulia/inventhier/internal/adapters/helpers/http_client"
 	"github.com/bagus-aulia/inventhier/internal/core/constants"
 	dto "github.com/bagus-aulia/inventhier/internal/core/dto/payment"
+	"github.com/bagus-aulia/inventhier/internal/core/helpers"
 	"github.com/bagus-aulia/inventhier/internal/core/ports"
 )
 
@@ -31,6 +32,12 @@ func NewRESTPaymentClient(
 
 // Checkout processes a checkout via REST API.
 func (c *restPaymentClient) Checkout(ctx context.Context, payload dto.CheckoutPayload) (response.Response[*dto.CheckoutResp], error) {
+	logger := helpers.GetZerologWithContext(ctx).
+		With().
+		Str("client", "rest.payment.v1").
+		Str("function", "Checkout").
+		Interface("payload", payload).
+		Logger()
 
 	bodyJSON, _ := json.Marshal(payload)
 
@@ -54,9 +61,10 @@ func (c *restPaymentClient) Checkout(ctx context.Context, payload dto.CheckoutPa
 			Reason:  err.Error(),
 		}
 
-		// logger.Error().
-		// 	Err(err).
-		// 	Msg("Failed to get access role")
+		logger.Error().
+			Err(err).
+			Msg("Failed to checkout")
+
 		return resp, err
 	}
 
@@ -64,9 +72,9 @@ func (c *restPaymentClient) Checkout(ctx context.Context, payload dto.CheckoutPa
 		errReason := resp.Error.Reason
 		err = errors.New(errReason)
 
-		// logger.Error().
-		// 	Err(err).
-		// 	Msg("Failed to get access role")
+		logger.Error().
+			Err(err).
+			Msg("There is an error on checkout service")
 
 		return resp, err
 	}

@@ -10,7 +10,7 @@ type CheckoutPayload struct {
 // CheckoutProduct is product data for checkout payload
 type CheckoutProduct struct {
 	ProductID string `json:"product_id"`
-	Quantity  string `json:"qty"`
+	Quantity  int    `json:"qty"`
 }
 
 // CheckoutResp is response for POST Checkout client endpoint

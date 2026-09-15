@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"time"
 
+	zerolog_tools "github.com/bagus-aulia/go-tools/tools/zerolog"
 	"github.com/bagus-aulia/inventhier/config"
-	restPayment "github.com/bagus-aulia/inventhier/internal/adapters/client/rest/payment/v1"
 	v1 "github.com/bagus-aulia/inventhier/internal/adapters/router/v1"
 	"github.com/bagus-aulia/inventhier/internal/bootstrap"
 	zerolog "github.com/rs/zerolog/log"
@@ -32,6 +32,16 @@ func main() {
 		log.Fatalf("could not load config: %v", err)
 	}
 
+	// 1. Set up logging
+	zerolog_tools.ConfigureZerologWithConfig(zerolog_tools.LoggerConfig{
+		Level:         "DEBUG",
+		EnableConsole: true,
+		LogFile:       "",
+		TimeFormat:    time.RFC822,
+		EnableCaller:  false,
+		EnableStack:   true,
+	})
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -45,7 +55,7 @@ func main() {
 	defer dbSQL.Close()
 
 	// 2. Initialize Redis Client
-	redisAddr := fmt.Sprintf("%s:%s", cfg.RedisHost, cfg.RedisPort)
+	redisAddr := cfg.RedisHost + ":" + cfg.RedisPort
 	redisClient := redis.NewClient(&redis.Options{
 		Addr: redisAddr,
 	})
@@ -68,20 +78,17 @@ func main() {
 	userGRPCClient := grpcClientConnection(cfg.UserServiceGRPCAddr, "user-service")
 	defer userGRPCClient.Close()
 
-	// 6. Initialize REST Clients (External Service Connections)
-	paymentRESTClient := restPayment.NewRESTPaymentClient(httpClient, cfg)
-
-	// 7. Bootstrap App (Dependency Injection)
+	// 6. Bootstrap App (Dependency Injection)
 	// This initializes all repositories, services, and wires up dependencies
-	app := bootstrap.NewApp(dbSQL, redisClient, mongoDb, userGRPCClient, paymentRESTClient)
+	app := bootstrap.NewApp(dbSQL, redisClient, mongoDb, userGRPCClient, httpClient, cfg)
 
-	// 8. Initialize HTTP Mux Router
+	// 7. Initialize HTTP Mux Router
 	mux := http.NewServeMux()
 
-	// 9. Initialize versioned routes (v1) with ProductService
+	// 8. Initialize versioned routes (v1) with ProductService
 	router := v1.NewRouter(mux, app.ProductService)
 
-	// 10. Start Server with Middleware
+	// 9. Start Server with Middleware
 	log.Printf("Starting server on :%s in %s mode...", cfg.ServerPort, cfg.AppEnv)
 	if err := http.ListenAndServe(":"+cfg.ServerPort, router.GetHandler()); err != nil {
 		log.Fatalf("could not start server: %v", err)

@@ -17,8 +17,9 @@ type Config struct {
 	SQLPass string `mapstructure:"SQL_PASS" default:""`
 	SQLName string `mapstructure:"SQL_DB_NAME" default:"inventhier_db"`
 
-	RedisHost string `mapstructure:"REDIS_HOST" default:"localhost"`
-	RedisPort string `mapstructure:"REDIS_PORT" default:"6379"`
+	RedisHost           string `mapstructure:"REDIS_HOST" default:"localhost"`
+	RedisPort           string `mapstructure:"REDIS_PORT" default:"6379"`
+	RedisDefaultTimeout int    `mapstructure:"REDIS_DEFAULT_TIMEOUT" default:"600"`
 
 	MongoURI    string `mapstructure:"MONGO_URI" default:"mongodb://root:password@localhost:27017"`
 	MongoDBName string `mapstructure:"MONGO_DB_NAME" default:"inventhier_db"`

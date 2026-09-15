@@ -3,18 +3,25 @@ template: testify
 packages:
   github.com/bagus-aulia/inventhier/internal/core/ports:
     config:
-      dir: "internal/adapters/client/grpc/user/mocks"
       filename: "{{.InterfaceName}}.go"
       pkgname: "mocks"
       structname: "{{.InterfaceName}}"
     interfaces:
       UserClient:
-  github.com/bagus-aulia/inventhier/internal/adapters/client/grpc/user/pb:
-    config:
-      dir: "{{.InterfaceDir}}/mocks"
-      filename: "{{.InterfaceName}}.go"
-      pkgname: "mocks"
-      structname: "{{.InterfaceName}}"
-    interfaces:
-      GRPCUserServiceClient:
+        config: 
+          dir: "internal/adapters/client/grpc/user/v1/mocks"
+      PaymentClient:
+        config: 
+          dir: "internal/adapters/client/rest/payment/v1/mocks"
+      ProductLogger:
+        config: 
+          dir: "internal/adapters/repository/mongodb/product_log/mocks"
+  # github.com/bagus-aulia/inventhier/internal/adapters/client/grpc/user/pb:
+  #   config:
+  #     dir: "{{.InterfaceDir}}/mocks"
+  #     filename: "{{.InterfaceName}}.go"
+  #     pkgname: "mocks"
+  #     structname: "{{.InterfaceName}}"
+  #   interfaces:
+  #     GRPCUserServiceClient:
          
