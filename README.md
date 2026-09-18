@@ -2,14 +2,14 @@
 
 Production-grade inventory management system demonstrating enterprise Go development practices: hexagonal architecture, multi-database integration, comprehensive testing, and clean code patterns.
 
-## 🎯 What This Project Shows
+## What This Project Shows
 
 - **Systems Design**: Multi-protocol integration (gRPC vs REST), database selection by use case, scalability patterns
 - **Production Go**: Proper context usage, structured logging, transaction management, error handling
 - **Testing Culture**: Multi-layer testing (50+ tests), mock generation, performance benchmarks
 - **Clean Architecture**: Port-driven design, dependency injection, separation of concerns
 
-## 🏗️ Architecture
+## Architecture
 
 **Hexagonal (Ports & Adapters)**: Business logic is isolated in `core/` domain, completely independent of infrastructure. All external dependencies are interfaces.
 
@@ -30,7 +30,7 @@ Key architectural files:
 - **`internal/core/services/v1/product/`** - Business logic (no framework coupling)
 - **`internal/adapters/`** - Infrastructure adapters (swappable implementations)
 
-## 💡 Code Quality Highlights
+## Code Quality Highlights
 
 ### 1. Dependency Injection Without Frameworks
 Pure Go DI container in `bootstrap/app.go`. Explicitly wires repositories, clients, and services with compile-time type safety. No reflection, no service locators.
@@ -62,7 +62,7 @@ Uses **zerolog** everywhere (no `fmt.Printf` in production code). JSON output in
 - **Client tests**: In-process gRPC mocking with `bufconn`
 - **50+ total test cases**, coverage reporting, performance benchmarks
 
-## 📚 Tech Stack
+## Tech Stack
 
 - **Language**: Go 1.25.0+
 - **Router**: Gorilla Mux
@@ -72,7 +72,7 @@ Uses **zerolog** everywhere (no `fmt.Printf` in production code). JSON output in
 - **Logging**: zerolog
 - **Quality**: golangci-lint, coverage reporting
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 # Clone & setup
@@ -93,7 +93,7 @@ make test
 go run cmd/api/main.go
 ```
 
-## 📖 Design Decisions
+## Design Decisions
 
 | Decision | Why | Trade-off |
 |----------|-----|-----------|
@@ -103,7 +103,7 @@ go run cmd/api/main.go
 | **gRPC for internal, REST for external** | gRPC is 2-3x faster for services; REST is universal for third-party APIs | Learning curve for gRPC |
 | **Request ID Tracing** | Trace requests across services and logs for production debugging | Small overhead |
 
-## 📝 Key Files for Code Review
+## Key Files for Code Review
 
 | File | What It Shows |
 |------|---------------|
@@ -114,7 +114,7 @@ go run cmd/api/main.go
 | `internal/adapters/middleware/request_id.go` | Proper Go context usage and request tracing |
 | `internal/core/services/v1/product/product_test.go` | Multi-layer testing with mocks |
 
-## 🧪 Testing & Quality
+## Testing & Quality
 
 ```bash
 make test              # Run all tests with coverage
@@ -127,14 +127,14 @@ make quality           # Full quality check (lint + test + coverage)
 
 **Coverage**: 50+ test cases covering service, repository, client, and middleware layers. Tests validate both success and error paths.
 
-## 🔌 External Package Integration
+## External Package Integration
 
 Integrates `github.com/bagus-aulia/go-tools` for:
 - Structured logging helpers with zerolog
 - Reusable utility patterns
 - Custom middleware components
 
-## 🌐 API Endpoints
+## API Endpoints
 
 ### Stock In
 ```
@@ -154,17 +154,17 @@ GET /api/v1/products/{sku}
 - Falls back to SQL on cache miss
 - Auto-invalidates cache on stock updates
 
-## 🎓 Production Patterns Demonstrated
+## Production Patterns Demonstrated
 
-- ✅ **Connection pooling** - Database connection management
-- ✅ **Audit trails** - `updated_by`, `updated_at` fields, MongoDB logging
-- ✅ **Concurrency control** - Pessimistic locking, distributed cache locking
-- ✅ **Error handling** - Consistent error types, proper HTTP status codes
-- ✅ **Context propagation** - Timeouts, cancellation, request IDs
-- ✅ **Graceful degradation** - Cache fallback to database
-- ✅ **Observability** - Structured logging, request tracing, performance metrics
+- **Connection pooling** - Database connection management
+- **Audit trails** - `updated_by`, `updated_at` fields, MongoDB logging
+- **Concurrency control** - Pessimistic locking, distributed cache locking
+- **Error handling** - Consistent error types, proper HTTP status codes
+- **Context propagation** - Timeouts, cancellation, request IDs
+- **Graceful degradation** - Cache fallback to database
+- **Observability** - Structured logging, request tracing, performance metrics
 
-## 🤔 Interview Questions You Might Ask
+## Interview Questions You Might Ask
 
 - "Why pessimistic locking instead of optimistic?"
 - "How would you handle distributed transactions across MySQL and MongoDB?"
@@ -172,7 +172,7 @@ GET /api/v1/products/{sku}
 - "How do you ensure request tracing works across async operations?"
 - "What monitoring/observability gaps exist in this project?"
 
-## 📚 Project Structure
+## Project Structure
 
 ```
 internal/
@@ -191,25 +191,6 @@ internal/
 └── bootstrap/          # Dependency injection
 cmd/api/main.go        # Application entry point
 ```
-
-## 📦 Key Dependencies
-
-- `google.golang.org/grpc` - gRPC framework
-- `github.com/go-sql-driver/mysql` - MySQL driver
-- `go.mongodb.org/mongo-driver` - MongoDB client
-- `github.com/redis/go-redis/v9` - Redis client
-- `github.com/rs/zerolog` - Structured logging
-- `github.com/vektra/mockery` - Mock generation
-- `github.com/gorilla/mux` - HTTP router
-
-## 🎯 What's Next?
-
-Possible enhancements (if you want to level it up):
-- [ ] OpenTelemetry integration for distributed tracing
-- [ ] GraphQL API alongside REST/gRPC
-- [ ] Event-driven architecture with message queues
-- [ ] API documentation (OpenAPI/Swagger)
-- [ ] Rate limiting and API quota management
 
 ---
 
