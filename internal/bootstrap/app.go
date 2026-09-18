@@ -3,16 +3,17 @@ package bootstrap
 import (
 	"database/sql"
 	"net/http"
+	"time"
 
 	"github.com/bagus-aulia/inventhier/config"
-	userGRPCv1 "github.com/bagus-aulia/inventhier/internal/adapters/client/grpc/user/v1"
-	restPayment "github.com/bagus-aulia/inventhier/internal/adapters/client/rest/payment/v1"
+	userGRPCv1 "github.com/bagus-aulia/inventhier/internal/adapters/client/grpc/v1/user"
+	restPayment "github.com/bagus-aulia/inventhier/internal/adapters/client/rest/v1/payment"
 	redisHelper "github.com/bagus-aulia/inventhier/internal/adapters/helpers/redis"
 	productLogMongo "github.com/bagus-aulia/inventhier/internal/adapters/repository/mongodb/product_log"
 	productCache "github.com/bagus-aulia/inventhier/internal/adapters/repository/redis/product"
 	productRepo "github.com/bagus-aulia/inventhier/internal/adapters/repository/sql/product"
 	"github.com/bagus-aulia/inventhier/internal/core/ports"
-	productService "github.com/bagus-aulia/inventhier/internal/core/services/product"
+	svc "github.com/bagus-aulia/inventhier/internal/core/services/v1/product"
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc"
@@ -41,6 +42,7 @@ func NewApp(
 	userGRPCClient *grpc.ClientConn,
 	httpClient *http.Client,
 	cfg *config.Config,
+	contextTimeout time.Duration,
 ) *App {
 	app := &App{}
 
@@ -76,10 +78,13 @@ func NewApp(
 	// ========================================
 
 	// Product Service with all dependencies injected
-	app.ProductService = productService.NewProductService(
+	app.ProductService = svc.NewProductService(
 		app.ProductCache,
 		app.ProductLog,
+		app.ProductRepository,
 		app.UserClient,
+		cfg,
+		contextTimeout,
 	)
 
 	return app

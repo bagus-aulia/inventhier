@@ -1,8 +1,12 @@
 package ports
 
+import (
+	"context"
+
+	productDTO "github.com/bagus-aulia/inventhier/internal/core/dto/product"
+)
+
 // ProductService is a driving port defining business use cases.
 type ProductService interface {
-	// GetProduct(ctx context.Context, id string) (*domain.Product, error)
-	// CreateProduct(ctx context.Context, name string, sku string, price float64, stock int) (*domain.Product, error)
-	// ListProducts(ctx context.Context) ([]domain.Product, error)
+	StockIn(c context.Context, payload productDTO.StockInPayload) error
 }

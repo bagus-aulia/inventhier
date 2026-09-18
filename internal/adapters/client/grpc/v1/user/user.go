@@ -1,10 +1,10 @@
-package v1
+package user
 
 import (
 	"context"
 	"errors"
 
-	grpc_pb "github.com/bagus-aulia/inventhier/internal/adapters/client/grpc/user/v1/pb"
+	grpc_pb "github.com/bagus-aulia/inventhier/internal/adapters/client/grpc/v1/user/pb"
 	"github.com/bagus-aulia/inventhier/internal/core/constants"
 	dto "github.com/bagus-aulia/inventhier/internal/core/dto/user"
 	"github.com/bagus-aulia/inventhier/internal/core/helpers"

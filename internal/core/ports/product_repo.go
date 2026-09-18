@@ -14,9 +14,12 @@ type ProductLogger interface {
 // Product is a driven port defining product data
 type Product interface {
 	GetProductBySKU(ctx context.Context, sku string) (*dto.Product, error)
+	UpdateProductStock(ctx context.Context, sku string, stockIn int, staffUUID string) error
+	CreateProduct(ctx context.Context, data dto.Product) error
 }
 
 // ProductCache is a driven port defining caching operations (e.g. Redis).
 type ProductCache interface {
 	GetProductBySKU(ctx context.Context, sku string) (*dto.Product, error)
+	DelProductCache(ctx context.Context, sku string) error
 }
