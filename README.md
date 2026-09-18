@@ -191,9 +191,3 @@ internal/
 └── bootstrap/          # Dependency injection
 cmd/api/main.go        # Application entry point
 ```
-
----
-
-**Author**: Bagus Aulia  
-**Go Version**: 1.25.0+  
-**Status**: Production Ready ✅
