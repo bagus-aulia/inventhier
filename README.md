@@ -164,14 +164,6 @@ GET /api/v1/products/{sku}
 - **Graceful degradation** - Cache fallback to database
 - **Observability** - Structured logging, request tracing, performance metrics
 
-## Interview Questions You Might Ask
-
-- "Why pessimistic locking instead of optimistic?"
-- "How would you handle distributed transactions across MySQL and MongoDB?"
-- "What's the difference between your gRPC and REST clients, and when would you use each?"
-- "How do you ensure request tracing works across async operations?"
-- "What monitoring/observability gaps exist in this project?"
-
 ## Project Structure
 
 ```
