@@ -3,6 +3,8 @@ package product
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"time"
 
 	"github.com/bagus-aulia/inventhier/internal/core/constants"
 	dto "github.com/bagus-aulia/inventhier/internal/core/dto/product"
@@ -37,7 +39,7 @@ func (r *sqlRepository) GetProductBySKU(ctx context.Context, sku string) (*dto.P
 			supplier,
 			stock, 
 			created_at, 
-			updated_at 
+			updated_at
 		FROM products 
 		WHERE sku = ?`
 	row := r.db.QueryRowContext(ctx, query, sku)
@@ -62,6 +64,61 @@ func (r *sqlRepository) GetProductBySKU(ctx context.Context, sku string) (*dto.P
 	}
 
 	return data, nil
+}
+
+func (r *sqlRepository) UpdateProductStock(ctx context.Context, sku string, stockIn int, staffUUID string) error {
+	logger := helpers.GetZerologWithContext(ctx).
+		With().
+		Str("repository", "sql.product").
+		Str("function", "UpdateProductStock").
+		Str("sku", sku).
+		Int("stock_in", stockIn).
+		Logger()
+
+	// 1. Begin Transaction
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to begin sql transaction")
+		return err
+	}
+
+	// rollback the transaction if there is an error during the process
+	defer tx.Rollback()
+
+	var currentStock int
+	// 2.Pessimistic Lock
+	queryLock := `SELECT stock 
+		FROM products 
+		WHERE sku = ? 
+		FOR UPDATE`
+	err = tx.QueryRowContext(ctx, queryLock, sku).Scan(&currentStock)
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			logger.Error().Err(err).Msg("Failed executing select operation")
+		}
+
+		return err
+	}
+
+	// 3. update data
+	queryUpdate := `UPDATE products SET 
+			stock = stock + ?,
+			updated_at = ?,
+			updated_by = ?
+		WHERE sku = ?`
+	_, err = tx.ExecContext(ctx, queryUpdate, stockIn, time.Now(), staffUUID, sku)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to update operation")
+		return err
+	}
+
+	// 4. save the change and lock released
+	if err := tx.Commit(); err != nil {
+		logger.Error().Err(err).Msg("Failed to commit transaction")
+		return err
+	}
+
+	return nil
 }
 
 func (r *sqlRepository) CreateProduct(ctx context.Context, data dto.Product) error {

@@ -3,13 +3,15 @@ module github.com/bagus-aulia/inventhier
 go 1.25.0
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/bagus-aulia/go-tools v1.0.0
 	github.com/bsm/redislock v0.10.0
 	github.com/bxcodec/faker v2.0.1+incompatible
 	github.com/go-redis/redismock/v9 v9.2.0
+	github.com/go-sql-driver/mysql v1.10.1
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
-	github.com/lib/pq v1.12.3
+	github.com/gorilla/mux v1.8.1
 	github.com/redis/go-redis/v9 v9.22.0
 	github.com/rs/zerolog v1.35.1
 	github.com/spf13/viper v1.21.0
@@ -20,6 +22,7 @@ require (
 )
 
 require (
+	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect

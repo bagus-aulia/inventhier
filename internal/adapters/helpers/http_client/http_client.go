@@ -1,4 +1,4 @@
-package htttpclient
+package httpclient
 
 import (
 	"bytes"
@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/bagus-aulia/inventhier/internal/core/constants"
+	"github.com/bagus-aulia/inventhier/internal/core/helpers"
 )
 
 // HTTPClient representation of http client
@@ -55,13 +56,13 @@ func setTracingHeaders(req *http.Request, ctx context.Context) {
 
 // DoRequest func for executing http call
 func DoRequest(opt *HttpOptions, rs interface{}) (int, error) {
-	// logger := zerolog_helper.GetZerologWithContext(opt.Ctx).With().
-	// 	Str("client", "http").
-	// 	Str("function", "DoRequest").
-	// 	Str("method", opt.Method).
-	// 	Str("hostname", opt.Hostname).
-	// 	Str("path", opt.Path).
-	// 	Logger()
+	logger := helpers.GetZerologWithContext(opt.Ctx).With().
+		Str("client", "http").
+		Str("function", "DoRequest").
+		Str("method", opt.Method).
+		Str("hostname", opt.Hostname).
+		Str("path", opt.Path).
+		Logger()
 
 	statusCode := http.StatusInternalServerError
 
@@ -77,17 +78,17 @@ func DoRequest(opt *HttpOptions, rs interface{}) (int, error) {
 
 	u, err := url.JoinPath(opt.Hostname, opt.Path)
 	if err != nil {
-		// logger.Error().
-		// 	Err(err).
-		// 	Msg("Failed to join path url")
+		logger.Error().
+			Err(err).
+			Msg("Failed to join path url")
 
 		return statusCode, err
 	}
 	req, err := http.NewRequestWithContext(opt.Ctx, opt.Method, u, body)
 	if err != nil {
-		// logger.Error().
-		// 	Err(err).
-		// 	Msg("Failed to create new request")
+		logger.Error().
+			Err(err).
+			Msg("Failed to create new request")
 
 		return statusCode, err
 	}
@@ -104,9 +105,9 @@ func DoRequest(opt *HttpOptions, rs interface{}) (int, error) {
 
 	resp, err := opt.Client.Do(req)
 	if err != nil {
-		// logger.Error().
-		// 	Err(err).
-		// 	Msg("Failed to execute HTTP client request")
+		logger.Error().
+			Err(err).
+			Msg("Failed to execute HTTP client request")
 
 		return statusCode, err
 	}
@@ -119,38 +120,38 @@ func DoRequest(opt *HttpOptions, rs interface{}) (int, error) {
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		// logger.Error().
-		// 	Err(err).
-		// 	Msg("Failed to read response body")
+		logger.Error().
+			Err(err).
+			Msg("Failed to read response body")
 
 		return http.StatusInternalServerError, err
 	}
 
-	// if statusCode != http.StatusOK && statusCode != http.StatusAccepted {
-	// 	logData := HttpLog{
-	// 		Method:     opt.Method,
-	// 		URL:        u,
-	// 		StatusCode: statusCode,
-	// 		Headers:    opt.Headers,
-	// 		Queries:    opt.Queries,
-	// 		BodyParam:  string(opt.Data),
-	// 		Response:   string(respBody),
-	// 	}
+	if statusCode != http.StatusOK && statusCode != http.StatusAccepted {
+		logData := HttpLog{
+			Method:     opt.Method,
+			URL:        u,
+			StatusCode: statusCode,
+			Headers:    opt.Headers,
+			URLQueries: opt.URLQueries,
+			BodyParam:  string(opt.Body),
+			Response:   string(respBody),
+		}
 
-	// if statusCode != http.StatusNotFound {
-	// 	logger.Error().
-	// 		Int("status_code", statusCode).
-	// 		Interface("log_data", logData).
-	// 		Msg("Received non-200 HTTP response")
-	// }
-	// }
+		if statusCode != http.StatusNotFound {
+			logger.Error().
+				Int("status_code", statusCode).
+				Interface("log_data", logData).
+				Msg("Received non-200 HTTP response")
+		}
+	}
 
 	err = json.Unmarshal(respBody, rs)
 	if err != nil {
-		// logger.Error().
-		// 	Err(err).
-		// 	Str("response_body", string(respBody)).
-		// 	Msg("Failed to unmarshal JSON response")
+		logger.Error().
+			Err(err).
+			Str("response_body", string(respBody)).
+			Msg("Failed to unmarshal JSON response")
 
 		return http.StatusInternalServerError, err
 	}

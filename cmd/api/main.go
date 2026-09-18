@@ -9,20 +9,19 @@ import (
 	"net/http"
 	"time"
 
+	// Register SQL driver
+	_ "github.com/go-sql-driver/mysql"
+
 	zerolog_tools "github.com/bagus-aulia/go-tools/tools/zerolog"
 	"github.com/bagus-aulia/inventhier/config"
 	v1 "github.com/bagus-aulia/inventhier/internal/adapters/router/v1"
 	"github.com/bagus-aulia/inventhier/internal/bootstrap"
-	zerolog "github.com/rs/zerolog/log"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-
-	// Register PostgreSQL driver
-	_ "github.com/lib/pq"
-
 	"github.com/redis/go-redis/v9"
+	zerolog "github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {
@@ -45,10 +44,10 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// 1. Initialize SQL Database (PostgreSQL)
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		cfg.SQLHost, cfg.SQLPort, cfg.SQLUser, cfg.SQLPass, cfg.SQLName)
-	dbSQL, err := sql.Open("postgres", dsn)
+	// 2. Initialize SQL Database (MySQL)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true",
+		cfg.SQLUser, cfg.SQLPass, cfg.SQLHost, cfg.SQLPort, cfg.SQLName)
+	dbSQL, err := sql.Open("mysql", dsn)
 	if err != nil {
 		log.Fatalf("failed to connect to SQL database: %v", err)
 	}
@@ -80,15 +79,13 @@ func main() {
 
 	// 6. Bootstrap App (Dependency Injection)
 	// This initializes all repositories, services, and wires up dependencies
-	app := bootstrap.NewApp(dbSQL, redisClient, mongoDb, userGRPCClient, httpClient, cfg)
+	timeoutContext := time.Duration(cfg.ContextTimeout) * time.Second
+	app := bootstrap.NewApp(dbSQL, redisClient, mongoDb, userGRPCClient, httpClient, cfg, timeoutContext)
 
-	// 7. Initialize HTTP Mux Router
-	mux := http.NewServeMux()
+	// 7. Initialize versioned routes (v1) with ProductService
+	router := v1.NewRouter(app.ProductService)
 
-	// 8. Initialize versioned routes (v1) with ProductService
-	router := v1.NewRouter(mux, app.ProductService)
-
-	// 9. Start Server with Middleware
+	// 8. Start Server with Middleware
 	log.Printf("Starting server on :%s in %s mode...", cfg.ServerPort, cfg.AppEnv)
 	if err := http.ListenAndServe(":"+cfg.ServerPort, router.GetHandler()); err != nil {
 		log.Fatalf("could not start server: %v", err)

@@ -14,7 +14,14 @@ type Product struct {
 	UpdatedAt time.Time `json:"updated_at" bson:"updated_at"`
 }
 
-// RestockPayload is struct for restock product
-type RestockPayload struct {
+// StockInReq is struct for restock product endpoint request
+type StockInReq struct {
+	ProductSKU string `json:"product_sku"`
+	ProductQty int    `json:"product_qty"`
+}
+
+// StockInPayload is struct for restock product
+type StockInPayload struct {
 	StaffUUID string `json:"staff_uuid"`
+	StockInReq
 }

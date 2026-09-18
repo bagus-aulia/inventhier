@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/bagus-aulia/inventhier/internal/core/constants"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -18,7 +19,13 @@ type JWTClaims struct {
 
 // ExtractTokenFromHeader extracts JWT token from Authorization header
 // Expected format: "Bearer <token>"
-func ExtractTokenFromHeader(authHeader string) (string, error) {
+func ExtractTokenFromHeader(headers map[string][]string) (string, error) {
+	authHeader := ""
+	for _, value := range headers[constants.Authorization] {
+		authHeader = value
+		break
+	}
+
 	if authHeader == "" {
 		return "", errors.New("authorization header is empty")
 	}

@@ -24,7 +24,8 @@ type Config struct {
 	MongoURI    string `mapstructure:"MONGO_URI" default:"mongodb://root:password@localhost:27017"`
 	MongoDBName string `mapstructure:"MONGO_DB_NAME" default:"inventhier_db"`
 
-	ClientTimeout int `mapstructure:"CLIENT_TIMEOUT" default:"30"` // seconds
+	ClientTimeout  int `mapstructure:"CLIENT_TIMEOUT" default:"30"`  // seconds
+	ContextTimeout int `mapstructure:"CONTEXT_TIMEOUT" default:"30"` // seconds
 
 	// External gRPC Services
 	UserServiceGRPCAddr string `mapstructure:"USER_SERVICE_GRPC_ADDR" default:"localhost:50051"`

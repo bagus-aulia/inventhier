@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/bagus-aulia/go-tools/tools/handler/response"
-	payment_client "github.com/bagus-aulia/inventhier/internal/adapters/client/rest/payment/v1"
+	payment_client "github.com/bagus-aulia/inventhier/internal/adapters/client/rest/v1/payment"
 	"github.com/bagus-aulia/inventhier/internal/core/constants"
 	dto "github.com/bagus-aulia/inventhier/internal/core/dto/payment"
 	"github.com/bxcodec/faker"

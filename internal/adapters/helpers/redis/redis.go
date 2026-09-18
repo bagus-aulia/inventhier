@@ -61,28 +61,6 @@ func (r *conRedisRepository) GetRedisData(ctx context.Context, key string, desti
 	return nil
 }
 
-// GetRedisString to get redis cache
-func (r *conRedisRepository) GetRedisString(ctx context.Context, key string) (string, error) {
-	logger := helpers.GetZerologWithContext(ctx).
-		With().
-		Str("adapter.helpers", "redis").
-		Str("function", "GetRedisString").
-		Str("key", key).
-		Logger()
-
-	redisResult, err := r.client.Get(ctx, key).Result()
-	if err != nil {
-		if err != redis.Nil {
-			logger.Warn().
-				Err(err).
-				Msg("Failed to get redis string")
-		}
-		return "", err
-	}
-
-	return redisResult, nil
-}
-
 // SetRedisData to store redis cache
 func (r *conRedisRepository) SetRedisData(ctx context.Context, key string, data string, timeout time.Duration) error {
 	logger := helpers.GetZerologWithContext(ctx).
@@ -109,22 +87,20 @@ func (r *conRedisRepository) SetRedisData(ctx context.Context, key string, data 
 }
 
 // DelRedisData to delete redis cache
-func (r *conRedisRepository) DelRedisData(ctx context.Context, keys []string) error {
+func (r *conRedisRepository) DelRedisData(ctx context.Context, key string) error {
 	logger := helpers.GetZerologWithContext(ctx).
 		With().
 		Str("adapter.helpers", "redis").
 		Str("function", "DelRedisData").
-		Strs("keys", keys).
+		Str("key", key).
 		Logger()
 
-	for _, key := range keys {
-		err := r.client.Del(ctx, key).Err()
-		if err != nil {
-			logger.Warn().
-				Err(err).
-				Msg("Failed to delete redis key")
-			return err
-		}
+	err := r.client.Del(ctx, key).Err()
+	if err != nil {
+		logger.Warn().
+			Err(err).
+			Msg("Failed to delete redis key")
+		return err
 	}
 
 	return nil

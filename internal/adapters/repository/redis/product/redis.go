@@ -30,6 +30,10 @@ func NewRedisCache(
 	}
 }
 
+var (
+	productDetailKeyPattern string = "product:sku:"
+)
+
 func (c *redisCache) GetProductBySKU(ctx context.Context, sku string) (*dto.Product, error) {
 	logger := helpers.GetZerologWithContext(ctx).
 		With().
@@ -41,7 +45,7 @@ func (c *redisCache) GetProductBySKU(ctx context.Context, sku string) (*dto.Prod
 	var data dto.Product
 
 	// Get Room Entity From REdis
-	redisKey := "product:sku:" + sku
+	redisKey := productDetailKeyPattern + sku
 	redisTimeOut := time.Duration(c.cfg.RedisDefaultTimeout)
 	err := c.redisClient.GetRedisData(ctx, redisKey, &data)
 	if err == nil {
@@ -66,4 +70,25 @@ func (c *redisCache) GetProductBySKU(ctx context.Context, sku string) (*dto.Prod
 	}
 
 	return productData, nil
+}
+
+func (c *redisCache) DelProductCache(ctx context.Context, sku string) error {
+	logger := helpers.GetZerologWithContext(ctx).
+		With().
+		Str("repository", "redis.product").
+		Str("function", "DelProductCache").
+		Str("sku", sku).
+		Logger()
+
+	// delete redis
+	redisKey := productDetailKeyPattern + sku
+	err := c.redisClient.DelRedisData(ctx, redisKey)
+	if err != nil {
+		logger.Error().
+			Err(err).
+			Msg("Failed to delete redis cache")
+		return err
+	}
+
+	return nil
 }

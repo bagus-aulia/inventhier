@@ -5,7 +5,7 @@ import (
 	"log"
 	"net"
 
-	user "github.com/bagus-aulia/inventhier/internal/adapters/client/grpc/user/v1/pb"
+	user "github.com/bagus-aulia/inventhier/internal/adapters/client/grpc/v1/user/pb"
 	"github.com/bxcodec/faker"
 	mock "github.com/stretchr/testify/mock"
 	"google.golang.org/grpc"
